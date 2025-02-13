@@ -5,6 +5,9 @@
  - logging-service - зберігає у пам’яті всі повідомлення які йому надходять, та може повертати їх
  - messages-service - поки виступає у ролі заглушки, при звернені до нього повертає статичне повідомлення
 
+### Additional tasks
+ - Retry mechanism and Deduplication, lets you send message several times, if it is not delivered in first time.
+ 
 ## How to Run:
 
 ```
@@ -35,13 +38,10 @@ Here in `tests` dir are presented tests wirtten in `pytest` library to test 5 mo
     - test_log_message
     - test_log_duplicate_message
 
-All of them works well. 
+All of them works well. <br>
 **To test by yourself, you can run:**
 ```
 pytest tests/ -v
 ```
 and you will see:
 <img src="images/tests.png">
-### Additional tasks
- - Retry mechanism and Deduplication, lets you send message several times, if it is not delivered in first time.
- 
