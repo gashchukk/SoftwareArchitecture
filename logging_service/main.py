@@ -3,9 +3,8 @@ from typing import Dict
 
 app = FastAPI()
 
-messages : Dict[str, str] = {
+messages : Dict[str, str] = {}
 
-}
 @app.post("/log")
 def log_message(data : dict):
     message_id, msg = data.get("id"), data.get("message")
