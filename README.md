@@ -1,3 +1,4 @@
+
 # HW Series of Software Architecture Course
 
 Архітектура складається з трьох мікросервисів:
@@ -45,3 +46,4 @@ pytest tests/ -v
 ```
 and you will see:
 <img src="images/tests.png">
+
