@@ -1,5 +1,5 @@
 
-# HW Series of Software Architecture Course
+# HW 3 Microsevices with Hazelcast
 
 Архітектура складається з трьох мікросервисів:
  - facade-service - приймає POST/GET запити від клієнта
@@ -7,7 +7,7 @@
  - messages-service - поки виступає у ролі заглушки, при звернені до нього повертає статичне повідомлення
 
 ### Additional tasks
- - Retry mechanism and Deduplication, lets you send message several times, if it is not delivered in first time.
+Тому, пропонується винести інформацію про IP-адреси інших мікросервісів у окремий реєстр, за який буде відповідати config-server (пізніше він буде замінений на Service registry and discovery).
  
 ## How to Run:
 
