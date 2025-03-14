@@ -26,4 +26,8 @@ async def log_message(data : RequestModel):
 @app.get("/log")
 async def get_logs():
     return list(messages_map.values())
-    
+
+@app.delete("/log")
+async def clear_logs():
+    messages_map.clear()
+    return {"status": "All messages cleared successfully"}

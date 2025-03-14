@@ -5,7 +5,7 @@ URL_READ = "http://0.0.0.0:8000/fetch"
 
 # Send 10 messages
 for i in range(10):
-    message ={"msg" : f"Test message {i + 1}"}
+    message ={"msg" : f"msg{i + 1}"}
     response = requests.post(URL_SEND, json=message)
     print(f"Sent: {message}, Status: {response.status_code}")
 

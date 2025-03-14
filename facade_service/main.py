@@ -17,7 +17,7 @@ async def get_logging_service_urls():
         try:
             response = await client.get(CONFIG_SERVER_URL)
             response.raise_for_status()
-            return response.json().get("instances", [])
+            return response.json().get("ips", [])
         except httpx.RequestError as e:
             print(f"Failed to fetch service addresses from config-server: {e}")
             return []
