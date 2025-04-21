@@ -11,12 +11,12 @@ messages_map = hazelcast_client.get_map("hdmap").blocking()
 
 class RequestModel(BaseModel):
     id: str
-    text: str
+    msg: str
 
 
 @app.post("/log")
 async def log_message(data : RequestModel):
-    message_id, msg = data.id, data.text
+    message_id, msg = data.id, data.msg
     if messages_map.contains_key(message_id):
         return {"status": "Message already exists. Duplicate message skipped."}
     messages_map.put(message_id, msg)

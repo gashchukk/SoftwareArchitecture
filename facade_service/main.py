@@ -29,12 +29,12 @@ async def get_service_urls(service):
 @app.post("/send")
 async def post_request(data: Message):
     new_uuid = str(uuid.uuid4())
-    message = {"id": new_uuid, "text": data.msg}
+    message = {"id": new_uuid, "msg": data.msg}
     try:
         producer.produce(
             topic="messages",
-            key=new_uuid,
-            value=data.text.encode("utf-8")
+            key=message["id"].encode("utf-8"),
+            value=message["msg"].encode("utf-8"),
         )
         producer.flush() 
         print(f"Produced message with ID {new_uuid} to Kafka.")
@@ -42,7 +42,7 @@ async def post_request(data: Message):
         print(f"Failed to send message to Kafka: {e}")
         return {"error": "Failed to send message to Kafka"}
     
-    logging_service_urls = await get_service_urls("/logging-service")
+    logging_service_urls = await get_service_urls("logging-service")
     shuffled_services = random.sample(logging_service_urls, len(logging_service_urls))
 
     async with httpx.AsyncClient() as client:
@@ -61,7 +61,7 @@ async def post_request(data: Message):
 async def get_request():
     combined_response = {"logging_messages": [], "messages_service_messages": []}
 
-    logging_service_urls = await get_service_urls("/logging-service")
+    logging_service_urls = await get_service_urls("logging-service")
     shuffled_services = random.sample(logging_service_urls, len(logging_service_urls))
 
     async with httpx.AsyncClient() as client:
@@ -69,25 +69,26 @@ async def get_request():
             try:
                 logging_response = await client.get(f"{selected_service}/log")
                 logging_response.raise_for_status()
-                combined_response["logging_messages"] = resp.json().get("messages", [])
-
-                break
-            except httpx.RequestError as e:
+                combined_response["logging_messages"] = logging_response.json()
+                break  # stop after the first successful one
+            except (httpx.RequestError, httpx.HTTPStatusError) as e:
                 print(f"Request to {selected_service} failed: {e}")
                 await asyncio.sleep(1)
-    messages_service_urls = await get_service_urls("/messages-service")
-    shuffled_messages_services = random.sample(messages_service_urls, len(messages_service_urls))
-    for url in shuffled_messages_services:
-        try:
-            resp = await client.get(url)
-            resp.raise_for_status()
-            combined_response["messages_service_messages"] = resp.json().get("messages", [])
-            break
-        except httpx.RequestError as e:
-            print(f"Request to messages service {url} failed: {e}")
-            await asyncio.sleep(1)
-                
+
+        messages_service_urls = await get_service_urls("messages-service")
+        shuffled_messages_services = random.sample(messages_service_urls, len(messages_service_urls))
+
+        for url in shuffled_messages_services:
+            try:
+                resp = await client.get(f"{url}/messages")
+                resp.raise_for_status()
+                combined_response["messages_service_messages"] = resp.json()
+                break
+            except (httpx.RequestError, httpx.HTTPStatusError) as e:
+                print(f"Request to messages service {url} failed: {e}")
+                await asyncio.sleep(1)
+
     if not combined_response["logging_messages"] and not combined_response["messages_service_messages"]:
         return {"error": "All services are unavailable."}
-    
+
     return combined_response

@@ -1,10 +1,10 @@
 
-# HW 3 Microsevices with Hazelcast
+# HW 4 Microsevices with Message Queue
 
 Архітектура тепер складається з чотирьох мікросервисів:
  - facade-service - приймає POST/GET запити від клієнта
  - logging-service - зберігає у пам’яті всі повідомлення які йому надходять, та може повертати їх
- - messages-service - поки виступає у ролі заглушки, при звернені до нього повертає статичне повідомлення
+ - messages-service - це Черга повідомень Kafka котра виступає consumer в даному випадку
  - config_server - Сервер до якого звертається facade_Service щоб отрмати інофрмацію про IP:port logging_service та messages_service
 
 ### Additional tasks
@@ -16,14 +16,14 @@
 chmod +x ./start_services.sh
 ./start_services.sh
 ```
-<img src="images/run.png">
+<img src="images/run1.png">
 
 ### Add-ons
 Порівняно з попередньою частиною, тепер кожен інстанс logging сервісу піднімає Hazelcast і вони відповідно утворюють кластер
 
 ### Завдання
 - Через HTTP POST записати 10 повідомлень msg1-msg10 через facade-service. Було виконано через скрипт client.py
-<img src="images/read_imgs.png">
+<img src="images/send_msg.png">
 - Показати які повідомлення отримав кожен з екземплярів logging-service (це має бути видно у логах сервісу)
 
 #### Log1
