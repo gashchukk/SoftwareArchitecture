@@ -38,3 +38,21 @@ Logger виводить повідомлення яке він зберігає
 <img src='images/facade_log.png'>
 На цьомк скріншоті можна побачити які логи зібрав Kafka 
 <img src="images/kafka_log.png">
+
+## Результати звернень до API
+
+### Facade Service
+
+<img src='images/facade_send.png'>
+
+<img src='images/facade_fetch.png'>
+
+### Messages Service
+
+#### Messages Service 1
+
+<img src='images/message_get.png'>
+
+#### Messages Service 2
+
+<img src='images/message2_get.png'>
