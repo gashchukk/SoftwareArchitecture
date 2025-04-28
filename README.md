@@ -1,15 +1,13 @@
 
-# HW 4 Microsevices with Message Queue
+# HW 5 Microsevices with Consul
 
 Архітектура тепер складається з чотирьох мікросервисів:
  - facade-service - приймає POST/GET запити від клієнта
  - logging-service - зберігає у пам’яті всі повідомлення які йому надходять, та може повертати їх
  - messages-service - це Черга повідомень Kafka котра виступає consumer в даному випадку
- - config_server - Сервер до якого звертається facade_Service щоб отрмати інофрмацію про IP:port logging_service та messages_service
+ - consul_service - Сервер до якого звертається кожен мікросервіс щоб зараєструватись і  щоб отрмати інофрмацію про інші сервери
 
-### Additional tasks
-- Implemented Config Server so that Facade can now easily get actual IPs of its microservices
- 
+
 ## How to Run:
 Perfectly to run every command in separate terminal
 ```
@@ -24,35 +22,26 @@ chmod +x ./start_services.sh
 <img src="images/run1.png">
 
 ### Add-ons
-Порівняно з попередньою частиною, тепер кожен інстанс logging сервісу піднімає Hazelcast і вони відповідно утворюють кластер
+Порівняно з попередньою частиною, тепер кожен відбувається автоматичне Discovery та remove, віповідно не потрібно нічого хардкодити
 
 ### Завдання
 - Через HTTP POST записати 10 повідомлень msg1-msg10 через facade-service. Було виконано через скрипт client.py
-<img src="images/send_msg.png">
-<img src='images/read_msg.png'>
+<img src='images/client.png'>
 
-## Логи Мікросервісів:
-Тут можна бачити логи Facade та logger.
-Facade виводить ID з яким він зберінає лог
-Logger виводить повідомлення яке він зберігає
-<img src='images/facade_log.png'>
-На цьомк скріншоті можна побачити які логи зібрав Kafka 
-<img src="images/kafka_log.png">
+## Consul
+<img src='images/consul.png'>
+Тепер відключимо facade
+<img src='images/kill.png'>
+<img src='images/after_kill.png'>
+Як бачите, сервіс зник з переліку оскільки не активний
 
-## Результати звернень до API
+## Logging Service kill
+Підключимо назад facade
+<img src='images/stsrt_again.png'>
 
-### Facade Service
+та спробуємо відключити logging і подивимось як дані будуть мінятись
+<img src='images/kill_logging.png'>
 
-<img src='images/facade_send.png'>
-
-<img src='images/facade_fetch.png'>
-
-### Messages Service
-
-#### Messages Service 1
-
-<img src='images/message_get.png'>
-
-#### Messages Service 2
-
-<img src='images/message2_get.png'>
+<img src='images/8003.png'>
+<img src='images/8004.png'>
+Можемо бачити що кожен з мікросервісів повертає усі дані, тому що у них стоїть replication factor 2 
