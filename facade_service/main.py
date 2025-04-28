@@ -6,25 +6,53 @@ import random
 import asyncio
 from confluent_kafka import Producer
 
+from consul_service import (
+    register_service,
+    deregister_service,
+    discover_service,
+    get_kv,
+)
+
 app = FastAPI()
+
+CONSUL_HOST     = "localhost"
+SERVICE_NAME    = "facade-service"
+SERVICE_PORT    = 8000
+SERVICE_ID      = f"{SERVICE_NAME}-{uuid.uuid4()}"
+
+KV_KAFKA_BOOT   = "config/kafka/bootstrap"
+KV_MQ_QUEUE     = "config/mq/queue_name"
+
+
+@app.on_event("startup")
+async def on_startup():
+    register_service(CONSUL_HOST, SERVICE_NAME, SERVICE_ID, SERVICE_PORT)
+
+    bootstrap = get_kv(CONSUL_HOST, KV_KAFKA_BOOT)
+    print(f"[DEBUG] Kafka bootstrap.servers = {bootstrap!r}")
+    app.state.producer = Producer({"bootstrap.servers": bootstrap})
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    deregister_service(CONSUL_HOST, SERVICE_ID)
+    app.state.producer.flush(10.0)
+
 
 class Message(BaseModel):
     msg: str
 
-CONFIG_SERVER_URL = "http://127.0.0.1:8005/services"
 
-producer_config = {"bootstrap.servers": "localhost:9092,localhost:9093,localhost:9094"}
+producer_config = {"bootstrap.servers": "localhost:29092,localhost:29093,localhost:29094"}
 producer = Producer(producer_config)
 
-async def get_service_urls(service):
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(CONFIG_SERVER_URL + f"/{service}")
-            response.raise_for_status()
-            return response.json().get("ips", [])
-        except httpx.RequestError as e:
-            print(f"Failed to fetch service addresses from config-server: {e}")
-            return []
+async def get_service_urls(service :str ):
+    instances = discover_service(CONSUL_HOST, service)
+    urls = []
+    for inst in instances:
+        host = inst.get("ServiceAddress") or inst.get("Address")
+        port = inst["ServicePort"]
+        urls.append(f"http://{host}:{port}")
+    return urls
 
 @app.post("/send")
 async def post_request(data: Message):
@@ -53,7 +81,7 @@ async def post_request(data: Message):
                 return {"status": "Message sent successfully", "message_id": new_uuid}
             except httpx.RequestError as e:
                 print(f"Request to {selected_service} failed: {e}")
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
 
     return {"error": "All logging services are unavailable."}
 
@@ -70,7 +98,7 @@ async def get_request():
                 logging_response = await client.get(f"{selected_service}/log")
                 logging_response.raise_for_status()
                 combined_response["logging_messages"] = logging_response.json()
-                break  # stop after the first successful one
+                break  
             except (httpx.RequestError, httpx.HTTPStatusError) as e:
                 print(f"Request to {selected_service} failed: {e}")
                 await asyncio.sleep(1)

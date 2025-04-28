@@ -1,14 +1,36 @@
 #!/bin/bash
 
+# 1) Kafka bootstrap list (must match your exposed EXTERNAL ports)
+curl -X PUT http://localhost:8500/v1/kv/config/kafka/bootstrap \
+     --data-binary localhost:29092,localhost:29093,localhost:29094
+
+# 2) MQ queue name
+curl -X PUT http://localhost:8500/v1/kv/config/mq/queue_name \
+     --data-binary messages
+
+# 3) Hazelcast member endpoints
+curl -X PUT http://localhost:8500/v1/kv/config/hazelcast/members \
+     --data-binary 127.0.0.1:5701,127.0.0.1:5702,127.0.0.1:5703
+
+# 4) Hazelcast cluster name
+curl -X PUT http://localhost:8500/v1/kv/config/hazelcast/cluster \
+     --data-binary dev
+
+sleep 5 
+
+# Using Kafka CLI (if you have it available)
+docker exec softwarearchitecture-kafka1-1 kafka-topics.sh --create --topic messages --bootstrap-server localhost:29092 --partitions 3 --replication-factor 2
+
+sleep 5
+
 FACADE_PORT=8000
 
 MESSAGES_PORT1=8001
-MESSAGES_PORT2=8006
+MESSAGES_PORT2=8005
 
 LOGGING_PORT1=8002
 LOGGING_PORT2=8003
 LOGGING_PORT3=8004
-CONFIG_PORT=8005
 
 uvicorn facade_service.main:app --host 0.0.0.0 --port $FACADE_PORT &
 
@@ -19,6 +41,4 @@ uvicorn messages_service.main:app --host 0.0.0.0 --port $MESSAGES_PORT2 &
 uvicorn logging_service.main:app --host 0.0.0.0 --port $LOGGING_PORT1 &
 uvicorn logging_service.main:app --host 0.0.0.0 --port $LOGGING_PORT2 &
 uvicorn logging_service.main:app --host 0.0.0.0 --port $LOGGING_PORT3 &
-
-uvicorn config_server.main:app --host 0.0.0.0 --port $CONFIG_PORT &
 wait
